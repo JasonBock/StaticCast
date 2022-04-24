@@ -201,7 +201,7 @@ public static string Name
 
 I look for either the getter or setter method, find the mapped method, and invoke that. Indexers would work in a very similar fashion - it's basically a combination of a method and a property.
 
-For methods and properties that return a value, it may be desirable to know if a call actually occurred. Returning `default` may be what the underlying method does as well. Generating something like a `Maybe<>` type and using that for the return type might address this issue.
+For methods and properties that return a value, it may be desirable to know if a call actually occurred. Returning `default` may be what the underlying method does as well. Generating something like an `Option<>` type and using that for the return type might address this issue. [This library](https://github.com/louthy/language-ext), or [this library](https://github.com/la-yumba/functional-csharp-code/), may give me a starting point. Though I need something very simplistic: either you didn't call anything, or you returned something.
 
 Operators are an unknown right now. With static abstract members in interfaces, you can declare an operator. However, the way generics work with the operator definition, it doesn't seem like it can handled with this `StaticCast<,>` approach. For now, I'm not going to handle operators.
 
