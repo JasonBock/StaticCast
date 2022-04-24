@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.Diagnostics;
 using System.Collections.Immutable;
 
-namespace StaticCastGenerator;
+namespace StaticCast;
 
 [Generator]
 internal sealed class StaticCastGenerator

@@ -1,6 +1,5 @@
-﻿namespace StaticCast.Tests
+﻿namespace StaticCast.Tests;
+
+public static class StaticCastGeneratorTests
 {
-	public static class StaticCastGeneratorTests
-	{
-	}
 }
