@@ -68,15 +68,15 @@ Essentially, this is what the user will type in:
 StaticCast<Type, InterfaceType>.MethodName(...);
 ```
 
-With the `IWork/Work` example above, it would be this:
+With the `IWork/Work` example above, it would be this (assume `T` is a generic parameter from a containing method or type):
 
 ```
-StaticCast<Work, IWork>.Work("data");
+StaticCast<T, IWork>.Work("data");
 ```
 
 The generator looks for method invocations that is a `SimpleMemberAccessExpression`, where the first part has the name "StaticCast", very similar to what I did with PartiallyApplied. This member needs exactly 2 generic parameters. The name of the call is what's used later (the parameters are irrelevant for generation as you'll see in a moment). If the 2nd type is an interface (we can't do that with a constraint, and if the type is "open" we can't check it with a diagnostic either), and it has static abstract members that match the provided name, we can generate all calls that match the name of the method. Internally it'll do a lookup via reflection (and make the generic method if needed) and invoke it.
 
-If the 2nd generic parameter is "open" and doesn't have enough constraint information to determine if it **can** be of an interface type, I should check this at runtime and throw NotSupportedException.
+If the 2nd generic parameter is "open" and doesn't have enough constraint information to determine if it **can** be of an interface type, I should check this at runtime and throw `NotSupportedException`.
 
 Using the InterfaceMapping type makes it straightforward to handle if the member implementation is explicit or not.
 
@@ -106,7 +106,7 @@ public static void Work(string data)
 		var interfaceMethod = typeof(TAs).GetMethod(
 			"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 		var targetMethod = GetTargetMethod(interfaceMethod);
-		targetMethod!.Invoke(null, new object[] { data });
+		targetMethod.Invoke(null, new object[] { data });
 	}
 }
 ```
@@ -205,8 +205,11 @@ For methods and properties that return a value, it may be desirable to know if a
 
 Operators are an unknown right now. With static abstract members in interfaces, you can declare an operator. However, the way generics work with the operator definition, it doesn't seem like it can handled with this `StaticCast<,>` approach. For now, I'm not going to handle operators.
 
+When I'm generating implementations in `StaticCast<,>`, I can't repeat them. For example, there may be two interfaces that have the same members in terms of their signature. Generating duplicates will cause a compilation error in the generated code. Therefore, I need to ensure I only create a member in `StaticCast<,>` if I haven't done it before. Maybe the `.ToString()` call on a `IMethodSymbol` will provide that for me automatically. We'll see. At some point, I'll have to figure out what the signature should be with all the `ref`, `out`, generic parameters, constraints, etc. in place.
+
 ## Diagnostics
 
 * If a member is not `public`, `static`, and `abstract`.
 * If the `StaticCast` usage does not provide exactly 2 generic parameters.
 * If the 2nd generic parameter to `StaticCast` is not an interface, or, if it's an open generic, it cannot be determined if it is constrained to an interface.
+* If the given member name isn't found on `TAs`
