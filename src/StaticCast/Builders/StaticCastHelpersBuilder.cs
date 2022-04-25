@@ -53,6 +53,9 @@ internal static class StaticCastHelpersBuilder
 		gatherer.Add(typeof(MethodInfo));
 		gatherer.Add(typeof(NotSupportedException));
 
+		writer.WriteLine("private static MethodInfo GetTargetMethod(MethodInfo interfaceMethod)");
+		writer.WriteLine("{");
+		writer.Indent++;
 		writer.WriteLine("var interfaceMap = typeof(T).GetInterfaceMap(typeof(TAs));");
 		writer.WriteLine();
 		writer.WriteLine("MethodInfo? targetMethod = null;");
@@ -84,5 +87,7 @@ internal static class StaticCastHelpersBuilder
 		writer.WriteLine("}");
 		writer.WriteLine();
 		writer.WriteLine("return targetMethod!;");
+		writer.Indent--;
+		writer.WriteLine("}");
 	}
 }

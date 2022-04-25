@@ -15,7 +15,7 @@ public static class StaticCastGeneratorTests
 				static abstract void Work(string data);
 			}
 
-			public static void Test
+			public static class Test
 			{
 				public static void CallWork() =>
 					StaticCast<object, IWork>.Work("data");
@@ -24,10 +24,11 @@ public static class StaticCastGeneratorTests
 
 		var generatedCode =
 			"""
+			using System;
 			using System.Reflection;
 			
 			#nullable enable
-			public static class StaticCast
+			public static class StaticCast<T, TAs>
 			{
 				private static void Verify()
 				{
@@ -49,7 +50,7 @@ public static class StaticCastGeneratorTests
 						throw new NotSupportedException($"The TAs type, {asType.FullName}, is not an interface.");
 					}
 				}
-
+				
 				private static MethodInfo GetTargetMethod(MethodInfo interfaceMethod)
 				{
 					var interfaceMap = typeof(T).GetInterfaceMap(typeof(TAs));
@@ -64,7 +65,7 @@ public static class StaticCastGeneratorTests
 						}
 					}
 					
-					if(targetMethod is null)
+					if (targetMethod is null)
 					{
 						throw new NotSupportedException(
 							$"{typeof(TAs).FullName} does not have a mapping for {interfaceMethod.Name} on type {typeof(T).FullName}");
@@ -86,9 +87,10 @@ public static class StaticCastGeneratorTests
 					}
 				}
 			}
+			
 			""";
 
-		await TestAssistants.RunAsync<StaticCastGenerator>(code,
+	  await TestAssistants.RunAsync<StaticCastGenerator>(code,
 			new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
 			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
