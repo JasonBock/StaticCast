@@ -2,39 +2,6 @@
 
 namespace StaticCast.IntegrationTests;
 
-public interface IMethodVoid
-{
-	static abstract void NoParameters();
-	static abstract void MultipleParameters(string a, int b);
-}
-
-public sealed class NotImplementingIMethodVoid
-{
-	public static void MultipleParameters(string a, int b) =>
-		NotImplementingIMethodVoid.WasMultipleParametersInvoked = true;
-
-	public static void NoParameters() =>
-		NotImplementingIMethodVoid.WasNoParametersInvoked = true;
-
-	public static bool WasMultipleParametersInvoked { get; private set; }
-
-	public static bool WasNoParametersInvoked { get; private set; }
-}
-
-public sealed class MethodVoid
-	: IMethodVoid
-{
-	public static void MultipleParameters(string a, int b) =>
-		MethodVoid.WasMultipleParametersInvoked = true;
-
-	public static void NoParameters() =>
-		MethodVoid.WasNoParametersInvoked = true;
-
-	public static bool WasMultipleParametersInvoked { get; private set; }
-
-	public static bool WasNoParametersInvoked { get; private set; }
-}
-
 public static class MethodVoidTests
 {
 	[Test]
@@ -63,5 +30,38 @@ public static class MethodVoidTests
 	{
 		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.MultipleParameters("a", 2);
 		Assert.That(NotImplementingIMethodVoid.WasMultipleParametersInvoked, Is.False);
+	}
+
+	public interface IMethodVoid
+	{
+		static abstract void NoParameters();
+		static abstract void MultipleParameters(string a, int b);
+	}
+
+	public sealed class NotImplementingIMethodVoid
+	{
+		public static void MultipleParameters(string a, int b) =>
+			NotImplementingIMethodVoid.WasMultipleParametersInvoked = true;
+
+		public static void NoParameters() =>
+			NotImplementingIMethodVoid.WasNoParametersInvoked = true;
+
+		public static bool WasMultipleParametersInvoked { get; private set; }
+
+		public static bool WasNoParametersInvoked { get; private set; }
+	}
+
+	public sealed class MethodVoid
+		: IMethodVoid
+	{
+		public static void MultipleParameters(string a, int b) =>
+			MethodVoid.WasMultipleParametersInvoked = true;
+
+		public static void NoParameters() =>
+			MethodVoid.WasNoParametersInvoked = true;
+
+		public static bool WasMultipleParametersInvoked { get; private set; }
+
+		public static bool WasNoParametersInvoked { get; private set; }
 	}
 }
