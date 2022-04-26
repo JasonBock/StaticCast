@@ -29,16 +29,19 @@ internal static class StaticCastMembersBuilder
 			writer.Indent++;
 			writer.WriteLine("var interfaceMethod = typeof(TAs).GetMethod(");
 			writer.Indent++;
-			var parameterTypes = string.Join(", ", memberToGenerate.Parameters.Select(
-				_ => $"typeof({_.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})"));
-			writer.WriteLine($"\"{memberToGenerate.Name}\", BindingFlags.Public | BindingFlags.Static, new[] {{ {parameterTypes} }})!;");
+			var parameterTypes = memberToGenerate.Parameters.Length > 0 ?
+				"new[] { " + string.Join(", ", memberToGenerate.Parameters.Select(
+					_ => $"typeof({_.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})")) + " }" :
+				"Type.EmptyTypes";
+			writer.WriteLine($"\"{memberToGenerate.Name}\", BindingFlags.Public | BindingFlags.Static, {parameterTypes})!;");
 			writer.Indent--;
 			writer.WriteLine("var targetMethod = GetTargetMethod(interfaceMethod);");
-			var parameterNames = string.Join(", ", memberToGenerate.Parameters.Select(
-				_ => $"{_.Name}"));
+			var parameterNames = memberToGenerate.Parameters.Length > 0 ?
+				"new object[] { " + string.Join(", ", memberToGenerate.Parameters.Select(_ => $"{_.Name}")) + " }" :
+				"null";
 			var shouldReturn = !memberToGenerate.ReturnsVoid ? 
 				$"return ({memberToGenerate.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})" : string.Empty;
-			writer.WriteLine($"{shouldReturn}targetMethod.Invoke(null, new object[] {{ {parameterNames} }});");
+			writer.WriteLine($"{shouldReturn}targetMethod.Invoke(null, {parameterNames});");
 			writer.Indent--;
 			writer.WriteLine("}");
 			writer.Indent--;
