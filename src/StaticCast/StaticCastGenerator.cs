@@ -33,8 +33,7 @@ internal sealed class StaticCastGenerator
 	private static void CreateOutput(Compilation compilation, ImmutableArray<MemberAccessExpressionSyntax> accessNodes,
 		AnalyzerConfigOptionsProvider options, SourceProductionContext context)
 	{
-		var signatures = new HashSet<string>();
-		var membersToGenerate = new List<IMethodSymbol>();
+		var membersToGenerate = new Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>>();
 
 		foreach (var accessNode in accessNodes)
 		{
@@ -50,16 +49,18 @@ internal sealed class StaticCastGenerator
 				{
 					var memberName = accessNodeName.Identifier.Text;
 					// TODO: We also need properties.
-					var members = castToParameterSymbol.GetMembers(memberName).OfType<IMethodSymbol>();
+					var members = castToParameterSymbol.GetMembers().OfType<IMethodSymbol>()
+						.Where(_ => _.IsStatic && _.IsAbstract);
 
 					foreach (var member in members)
 					{
-						// TODO: This may not be good enough (and probably isn't)
-						var memberSignature = member.ToString();
-
-						if (signatures.Add(memberSignature))
+						if(membersToGenerate.ContainsKey(member.ReturnType))
 						{
-							membersToGenerate.Add(member);
+							membersToGenerate[member.ReturnType].Add(new MethodSymbolSignature(member));
+						}
+						else
+						{
+							membersToGenerate.Add(member.ReturnType, new() { new MethodSymbolSignature(member) });
 						}
 					}
 				}

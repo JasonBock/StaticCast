@@ -7,9 +7,9 @@ namespace StaticCast.Builders;
 
 internal sealed class StaticCastBuilder
 {
-	private readonly List<IMethodSymbol> membersToGenerate;
+	private readonly Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate;
 
-	internal StaticCastBuilder(List<IMethodSymbol> membersToGenerate)
+	internal StaticCastBuilder(Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
 	{
 		this.membersToGenerate = membersToGenerate;
 		this.Code = SourceText.From(this.Build(), Encoding.UTF8);
