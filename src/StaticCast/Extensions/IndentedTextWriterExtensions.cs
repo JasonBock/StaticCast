@@ -7,8 +7,11 @@ internal static class IndentedTextWriterExtensions
 {
 	// This is fragile, but hopefully we can get a public readonly property for this private field
 	// in the future.
-	internal static string GetTabString(this IndentedTextWriter self) =>
-			(string)typeof(IndentedTextWriter).GetField("_tabString", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(self);
+	internal static string GetTabString(this IndentedTextWriter self)
+	{
+		var tabStringField = typeof(IndentedTextWriter).GetField("_tabString", BindingFlags.NonPublic | BindingFlags.Instance);
+		return tabStringField is not null ? (string)tabStringField.GetValue(self)! : "\t";
+	}
 
 	internal static void WriteLines(this IndentedTextWriter self, string content, string templateIndentation, int indentation = 0)
 	{
@@ -18,7 +21,7 @@ internal static class IndentedTextWriterExtensions
 		{
 			self.Indent += indentation;
 		}
-	
+
 		foreach (var line in content.Split(new[] { self.NewLine }, StringSplitOptions.None))
 		{
 			var contentLine = line;

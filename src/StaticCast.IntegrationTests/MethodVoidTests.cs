@@ -7,28 +7,28 @@ public static class MethodVoidTests
 	[Test]
 	public static void CallWithNoParametersWithImplementingClass()
 	{
-		StaticCast<MethodVoid, IMethodVoid>.NoParameters();
+		StaticCast<MethodVoid, IMethodVoid>.Void.NoParameters();
 		Assert.That(MethodVoid.WasNoParametersInvoked, Is.True);
 	}
 
 	[Test]
 	public static void CallWithNoParametersWithNonImplementingClass()
 	{
-		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.NoParameters();
+		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.Void.NoParameters();
 		Assert.That(NotImplementingIMethodVoid.WasNoParametersInvoked, Is.False);
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithImplementingClass()
 	{
-		StaticCast<MethodVoid, IMethodVoid>.MultipleParameters("a", 2);
+		StaticCast<MethodVoid, IMethodVoid>.Void.MultipleParameters("a", 2);
 		Assert.That(MethodVoid.WasMultipleParametersInvoked, Is.True);
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithNonImplementingClass()
 	{
-		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.MultipleParameters("a", 2);
+		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.Void.MultipleParameters("a", 2);
 		Assert.That(NotImplementingIMethodVoid.WasMultipleParametersInvoked, Is.False);
 	}
 
