@@ -1,11 +1,19 @@
 ﻿using System.CodeDom.Compiler;
+using System.Reflection;
 
 namespace StaticCast.Extensions;
 
 internal static class IndentedTextWriterExtensions
 {
-	internal static void WriteLines(this IndentedTextWriter self, string content, string templateIndentation, string tabString, int indentation = 0)
+	// This is fragile, but hopefully we can get a public readonly property for this private field
+	// in the future.
+	internal static string GetTabString(this IndentedTextWriter self) =>
+			(string)typeof(IndentedTextWriter).GetField("_tabString", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(self);
+
+	internal static void WriteLines(this IndentedTextWriter self, string content, string templateIndentation, int indentation = 0)
 	{
+		var tabString = self.GetTabString();
+
 		if (indentation > 0)
 		{
 			self.Indent += indentation;

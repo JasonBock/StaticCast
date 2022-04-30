@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using StaticCast.Extensions;
 using System.CodeDom.Compiler;
 using System.Reflection;
 
@@ -15,37 +16,37 @@ internal static class StaticCastMembersBuilder
 		// i.e. no generics, no outs or refs, etc.
 		foreach (var memberToGenerate in membersToGenerate)
 		{
-			writer.WriteLine();
-			var returnType = memberToGenerate.ReturnsVoid ? "void" : memberToGenerate.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+			var returnType = memberToGenerate.ReturnsVoid ? "void" : 
+				memberToGenerate.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 			var parameters = string.Join(", ", memberToGenerate.Parameters.Select(
 				_ => $"{_.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)} {_.Name}"));
-			writer.WriteLine($"public static {returnType} {memberToGenerate.Name}({parameters})");
-			writer.WriteLine("{");
-			writer.Indent++;
-			writer.WriteLine("Verify();");
-			writer.WriteLine();
-			writer.WriteLine("if (typeof(T).IsAssignableTo(typeof(TAs)))");
-			writer.WriteLine("{");
-			writer.Indent++;
-			writer.WriteLine("var interfaceMethod = typeof(TAs).GetMethod(");
-			writer.Indent++;
 			var parameterTypes = memberToGenerate.Parameters.Length > 0 ?
 				"new[] { " + string.Join(", ", memberToGenerate.Parameters.Select(
 					_ => $"typeof({_.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})")) + " }" :
 				"Type.EmptyTypes";
-			writer.WriteLine($"\"{memberToGenerate.Name}\", BindingFlags.Public | BindingFlags.Static, {parameterTypes})!;");
-			writer.Indent--;
-			writer.WriteLine("var targetMethod = GetTargetMethod(interfaceMethod);");
 			var parameterNames = memberToGenerate.Parameters.Length > 0 ?
 				"new object[] { " + string.Join(", ", memberToGenerate.Parameters.Select(_ => $"{_.Name}")) + " }" :
 				"null";
-			var shouldReturn = !memberToGenerate.ReturnsVoid ? 
+			var shouldReturn = !memberToGenerate.ReturnsVoid ?
 				$"return ({memberToGenerate.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})" : string.Empty;
-			writer.WriteLine($"{shouldReturn}targetMethod.Invoke(null, {parameterNames});");
-			writer.Indent--;
-			writer.WriteLine("}");
-			writer.Indent--;
-			writer.WriteLine("}");
+
+			var code =
+				$$"""
+				
+				public static {{returnType}} {{memberToGenerate.Name}}({{parameters}})
+				{
+					Verify();
+					
+					if (typeof(T).IsAssignableTo(typeof(TAs)))
+					{
+						var interfaceMethod = typeof(TAs).GetMethod(
+							"{{memberToGenerate.Name}}", BindingFlags.Public | BindingFlags.Static, {{parameterTypes}})!;
+						var targetMethod = GetTargetMethod(interfaceMethod);
+						{{shouldReturn}}targetMethod.Invoke(null, {{parameterNames}});
+					}
+				}
+				""";
+			writer.WriteLines(code, "\t");
 		}
 	}
 }

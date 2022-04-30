@@ -40,7 +40,7 @@ internal static class StaticCastHelpersBuilder
 				}
 			}
 			""";
-		writer.WriteLines(code, "\t", "\t");
+		writer.WriteLines(code, "\t");
 	}
 
 	private static void BuildGetTargetMethod(IndentedTextWriter writer, NamespaceGatherer gatherer)
@@ -77,6 +77,6 @@ internal static class StaticCastHelpersBuilder
 				return targetMethod!;
 			}
 			""";
-		writer.WriteLines(code, "\t", "\t");
+		writer.WriteLines(code, "\t");
 	}
 }
