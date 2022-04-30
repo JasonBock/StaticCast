@@ -1,15 +1,16 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using System.CodeDom.Compiler;
+using System.Collections.Immutable;
 using System.Text;
 
 namespace StaticCast.Builders;
 
 internal sealed class StaticCastBuilder
 {
-	private readonly Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate;
+	private readonly ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate;
 
-	internal StaticCastBuilder(Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
+	internal StaticCastBuilder(ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
 	{
 		this.membersToGenerate = membersToGenerate;
 		this.Code = SourceText.From(this.Build(), Encoding.UTF8);

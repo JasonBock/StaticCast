@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using StaticCast.Extensions;
 using System.CodeDom.Compiler;
+using System.Collections.Immutable;
 using System.Reflection;
 
 namespace StaticCast.Builders;
@@ -8,7 +9,7 @@ namespace StaticCast.Builders;
 internal static class StaticCastMembersBuilder
 {
 	internal static void Build(IndentedTextWriter writer, NamespaceGatherer gatherer,
-		  Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
+		  ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
 	{
 		gatherer.Add(typeof(BindingFlags));
 

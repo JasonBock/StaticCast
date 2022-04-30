@@ -33,44 +33,13 @@ internal sealed class StaticCastGenerator
 	private static void CreateOutput(Compilation compilation, ImmutableArray<MemberAccessExpressionSyntax> accessNodes,
 		AnalyzerConfigOptionsProvider options, SourceProductionContext context)
 	{
-		var membersToGenerate = new Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>>();
+		var information = new StaticCastInformation(accessNodes, compilation);
 
-		foreach (var accessNode in accessNodes)
+		// TODO: Check diagnostics.
+
+		if (information.MembersToGenerate.Count > 0)
 		{
-			var model = compilation.GetSemanticModel(accessNode.SyntaxTree)!;
-			var castToParameterType = (accessNode.Expression as GenericNameSyntax)!.TypeArgumentList.Arguments[1];
-			var castToParameterSymbol = model.GetSymbolInfo(castToParameterType).Symbol as INamedTypeSymbol;
-
-			// TODO: if the type kind isn't found, but we can somehow infer that
-			// it would be an interface based on constraints, that should be done.
-			if (castToParameterSymbol!.TypeKind == TypeKind.Interface)
-			{
-				if (accessNode.Name is IdentifierNameSyntax accessNodeName)
-				{
-					var memberName = accessNodeName.Identifier.Text;
-					// TODO: We also need properties.
-					var members = castToParameterSymbol.GetMembers().OfType<IMethodSymbol>()
-						.Where(_ => _.IsStatic && _.IsAbstract);
-
-					foreach (var member in members)
-					{
-						if(membersToGenerate.ContainsKey(member.ReturnType))
-						{
-							membersToGenerate[member.ReturnType].Add(new MethodSymbolSignature(member));
-						}
-						else
-						{
-							membersToGenerate.Add(member.ReturnType, new() { new MethodSymbolSignature(member) });
-						}
-					}
-				}
-			}
-		}
-
-		if (membersToGenerate.Count > 0)
-		{
-			var builder = new StaticCastBuilder(membersToGenerate);
-			// TODO: Check diagnostics.
+			var builder = new StaticCastBuilder(information.MembersToGenerate);
 			context.AddSource("StaticCast.g.cs", builder.Code);
 		}
 	}
