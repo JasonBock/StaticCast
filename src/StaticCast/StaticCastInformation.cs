@@ -23,7 +23,7 @@ internal sealed class StaticCastInformation
 			// it would be an interface based on constraints, that should be done.
 			if(castToParameterSymbol!.TypeKind != TypeKind.Interface)
 			{
-				diagnostics.Add(GenericParameterIsNotInterfaceDiagnostic.Create(castToParameterSymbol));
+				diagnostics.Add(GenericParameterIsNotInterfaceDiagnostic.Create(castToParameterSymbol, castToParameterType));
 			}
 			else
 			{
@@ -36,7 +36,7 @@ internal sealed class StaticCastInformation
 
 					if (!members.Any())
 					{
-						diagnostics.Add(InterfaceHasNoStaticAbstractMembersDiagnostic.Create(castToParameterSymbol));
+						diagnostics.Add(InterfaceHasNoStaticAbstractMembersDiagnostic.Create(castToParameterSymbol, castToParameterType));
 					}
 					else
 					{
