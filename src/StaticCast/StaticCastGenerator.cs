@@ -35,8 +35,11 @@ internal sealed class StaticCastGenerator
 	{
 		var information = new StaticCastInformation(accessNodes, compilation);
 
-		// TODO: Check diagnostics.
-
+		foreach(var diagnostic in information.Diagnostics)
+		{
+			context.ReportDiagnostic(diagnostic);
+		}
+	
 		if (information.MembersToGenerate.Count > 0)
 		{
 			var builder = new StaticCastBuilder(information.MembersToGenerate);

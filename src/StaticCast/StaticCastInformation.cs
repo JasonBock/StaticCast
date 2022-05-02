@@ -17,38 +17,46 @@ internal sealed class StaticCastInformation
 		{
 			var model = compilation.GetSemanticModel(accessNode.SyntaxTree)!;
 			var castToParameterType = (accessNode.Expression as GenericNameSyntax)!.TypeArgumentList.Arguments[1];
-			var castToParameterSymbol = model.GetSymbolInfo(castToParameterType).Symbol as INamedTypeSymbol;
+			var (symbol, castToParameterSymbols) = StaticCastInformation.GetParameterTypes(castToParameterType, model);
 
-			// TODO: if the type kind isn't found, but we can somehow infer that
-			// it would be an interface based on constraints, that should be done.
-			if(castToParameterSymbol!.TypeKind != TypeKind.Interface)
+			if (castToParameterSymbols.Length == 0)
 			{
-				diagnostics.Add(GenericParameterIsNotInterfaceDiagnostic.Create(castToParameterSymbol, castToParameterType));
+				diagnostics.Add(GenericParameterIsNotInterfaceDiagnostic.Create(symbol, castToParameterType));
 			}
 			else
 			{
-				if (accessNode.Name is IdentifierNameSyntax accessNodeName)
+				foreach (var castToParameterSymbol in castToParameterSymbols)
 				{
-					var memberName = accessNodeName.Identifier.Text;
-					// TODO: We also need properties.
-					var members = castToParameterSymbol.GetMembers().OfType<IMethodSymbol>()
-						.Where(_ => _.IsStatic && _.IsAbstract);
-
-					if (!members.Any())
+					if (castToParameterSymbol!.TypeKind != TypeKind.Interface)
 					{
-						diagnostics.Add(InterfaceHasNoStaticAbstractMembersDiagnostic.Create(castToParameterSymbol, castToParameterType));
+						diagnostics.Add(GenericParameterIsNotInterfaceDiagnostic.Create(castToParameterSymbol, castToParameterType));
 					}
 					else
 					{
-						foreach (var member in members)
+						if (accessNode.Name is IdentifierNameSyntax accessNodeName)
 						{
-							if (membersToGenerate.ContainsKey(member.ReturnType))
+							var memberName = accessNodeName.Identifier.Text;
+							// TODO: We also need properties.
+							var members = castToParameterSymbol.GetMembers().OfType<IMethodSymbol>()
+								.Where(_ => _.IsStatic && _.IsAbstract);
+
+							if (!members.Any())
 							{
-								membersToGenerate[member.ReturnType].Add(new MethodSymbolSignature(member));
+								diagnostics.Add(InterfaceHasNoStaticAbstractMembersDiagnostic.Create(castToParameterSymbol, castToParameterType));
 							}
 							else
 							{
-								membersToGenerate.Add(member.ReturnType, new() { new MethodSymbolSignature(member) });
+								foreach (var member in members)
+								{
+									if (membersToGenerate.ContainsKey(member.ReturnType))
+									{
+										membersToGenerate[member.ReturnType].Add(new MethodSymbolSignature(member));
+									}
+									else
+									{
+										membersToGenerate.Add(member.ReturnType, new() { new MethodSymbolSignature(member) });
+									}
+								}
 							}
 						}
 					}
@@ -58,6 +66,17 @@ internal sealed class StaticCastInformation
 
 		this.Diagnostics = diagnostics.ToImmutableArray();
 		this.MembersToGenerate = membersToGenerate.ToImmutableDictionary();
+	}
+
+	private static (ISymbol?, ImmutableArray<ITypeSymbol>) GetParameterTypes(TypeSyntax node, SemanticModel model)
+	{
+		var symbol = model.GetSymbolInfo(node).Symbol;
+		return symbol switch
+		{
+			INamedTypeSymbol typeSymbol => (symbol, ImmutableArray.Create<ITypeSymbol>(typeSymbol)),
+			ITypeParameterSymbol typeParameterSymbol => (symbol, typeParameterSymbol.ConstraintTypes),
+			_ => (symbol, ImmutableArray<ITypeSymbol>.Empty)
+		};
 	}
 
 	internal ImmutableArray<Diagnostic> Diagnostics { get; private set; }
