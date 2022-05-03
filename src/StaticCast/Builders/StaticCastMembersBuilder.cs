@@ -22,6 +22,13 @@ internal static class StaticCastMembersBuilder
 
 			foreach(var signature in memberToGenerate.Value)
 			{
+				// TODO: what about generic parameter names?
+				var interfaceMethodVariable = VariableNameGenerator.GenerateUniqueName("interfaceMethod", signature.Method.Parameters);
+				var targetMethodVariable = VariableNameGenerator.GenerateUniqueName("targetMethod", signature.Method.Parameters);
+				var resultVariable = !signature.Method.ReturnsVoid ?
+					VariableNameGenerator.GenerateUniqueName("result", signature.Method.Parameters) :
+					string.Empty;
+
 				// TODO: For now, I'm assuming the tests will be very simple -
 				// i.e. no generics, no outs or refs, etc.
 				var parameterTypes = signature.Method.Parameters.Length > 0 ?
@@ -31,8 +38,10 @@ internal static class StaticCastMembersBuilder
 				var parameterNames = signature.Method.Parameters.Length > 0 ?
 					"new object[] { " + string.Join(", ", signature.Method.Parameters.Select(_ => $"{_.Name}")) + " }" :
 					"null";
+				var invocationResultCode = !signature.Method.ReturnsVoid ?
+					$"var {resultVariable} = " : string.Empty;
 				var returnValueForInvocation = !signature.Method.ReturnsVoid ?
-					$"return (true, ({signature.Method.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})result!)" : 
+					$"return (true, ({signature.Method.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}){resultVariable}!)" : 
 					"return (true, Unit.Instance)";
 				var returnForNoInvocation =
 					!signature.Method.ReturnsVoid ? "return (false, default!)" : "return (false, Unit.Instance)";
@@ -45,10 +54,10 @@ internal static class StaticCastMembersBuilder
 						
 						if (typeof(T).IsAssignableTo(typeof(TAs)))
 						{
-							var interfaceMethod = typeof(TAs).GetMethod(
+							var {{interfaceMethodVariable}} = typeof(TAs).GetMethod(
 								"{{signature.Method.Name}}", BindingFlags.Public | BindingFlags.Static, {{parameterTypes}})!;
-							var targetMethod = GetTargetMethod(interfaceMethod);
-							var result = targetMethod.Invoke(null, {{parameterNames}});
+							var {{targetMethodVariable}} = GetTargetMethod({{interfaceMethodVariable}});
+							{{invocationResultCode}}{{targetMethodVariable}}.Invoke(null, {{parameterNames}});
 							{{returnValueForInvocation}};
 						}
 						
