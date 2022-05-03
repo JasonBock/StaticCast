@@ -7,29 +7,33 @@ public static class MethodVoidTests
 	[Test]
 	public static void CallWithNoParametersWithImplementingClass()
 	{
-		StaticCast<MethodVoid, IMethodVoid>.Void.NoParameters();
-		Assert.That(MethodVoid.WasNoParametersInvoked, Is.True);
+		var (wasInvoked, result) = StaticCast<MethodVoid, IMethodVoid>.Void.NoParameters();
+		Assert.That(wasInvoked, Is.True);
+		Assert.That(result, Is.SameAs(Unit.Instance));
 	}
 
 	[Test]
 	public static void CallWithNoParametersWithNonImplementingClass()
 	{
-		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.Void.NoParameters();
-		Assert.That(NotImplementingIMethodVoid.WasNoParametersInvoked, Is.False);
+		var (wasInvoked, result) = StaticCast<NotImplementingIMethodVoid, IMethodVoid>.Void.NoParameters();
+		Assert.That(wasInvoked, Is.False);
+		Assert.That(result, Is.SameAs(Unit.Instance));
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithImplementingClass()
 	{
-		StaticCast<MethodVoid, IMethodVoid>.Void.MultipleParameters("a", 2);
-		Assert.That(MethodVoid.WasMultipleParametersInvoked, Is.True);
+		var (wasInvoked, result) = StaticCast<MethodVoid, IMethodVoid>.Void.MultipleParameters("a", 2);
+		Assert.That(wasInvoked, Is.True);
+		Assert.That(result, Is.SameAs(Unit.Instance));
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithNonImplementingClass()
 	{
-		StaticCast<NotImplementingIMethodVoid, IMethodVoid>.Void.MultipleParameters("a", 2);
-		Assert.That(NotImplementingIMethodVoid.WasMultipleParametersInvoked, Is.False);
+		var (wasInvoked, result) = StaticCast<NotImplementingIMethodVoid, IMethodVoid>.Void.MultipleParameters("a", 2);
+		Assert.That(wasInvoked, Is.False);
+		Assert.That(result, Is.SameAs(Unit.Instance));
 	}
 
 	public interface IMethodVoid
@@ -40,28 +44,16 @@ public static class MethodVoidTests
 
 	public sealed class NotImplementingIMethodVoid
 	{
-		public static void MultipleParameters(string a, int b) =>
-			NotImplementingIMethodVoid.WasMultipleParametersInvoked = true;
+		public static void MultipleParameters(string a, int b) { }
 
-		public static void NoParameters() =>
-			NotImplementingIMethodVoid.WasNoParametersInvoked = true;
-
-		public static bool WasMultipleParametersInvoked { get; private set; }
-
-		public static bool WasNoParametersInvoked { get; private set; }
+		public static void NoParameters() { }
 	}
 
 	public sealed class MethodVoid
 		: IMethodVoid
 	{
-		public static void MultipleParameters(string a, int b) =>
-			MethodVoid.WasMultipleParametersInvoked = true;
+		public static void MultipleParameters(string a, int b) { }
 
-		public static void NoParameters() =>
-			MethodVoid.WasNoParametersInvoked = true;
-
-		public static bool WasMultipleParametersInvoked { get; private set; }
-
-		public static bool WasNoParametersInvoked { get; private set; }
+		public static void NoParameters() { }
 	}
 }

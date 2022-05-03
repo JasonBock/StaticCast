@@ -7,29 +7,31 @@ public static class MethodReturnTests
 	[Test]
 	public static void CallWithNoParametersWithImplementingClass()
 	{
-		StaticCast<MethodReturn, IMethodReturn>.Int.NoParameters();
-		Assert.That(MethodReturn.WasNoParametersInvoked, Is.True);
+		var (wasInvoked, result) = StaticCast<MethodReturn, IMethodReturn>.Int.NoParameters();
+		Assert.That(wasInvoked, Is.True);
+		Assert.That(result, Is.EqualTo(1));
 	}
 
 	[Test]
 	public static void CallWithNoParametersWithNonImplementingClass()
 	{
-		StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.NoParameters();
-		Assert.That(NotImplementingIMethodReturn.WasNoParametersInvoked, Is.False);
+		var (wasInvoked, _) = StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.NoParameters();
+		Assert.That(wasInvoked, Is.False);
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithImplementingClass()
 	{
-		StaticCast<MethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
-		Assert.That(MethodReturn.WasMultipleParametersInvoked, Is.True);
+		var (wasInvoked, result) = StaticCast<MethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
+		Assert.That(wasInvoked, Is.True);
+		Assert.That(result, Is.EqualTo(2));
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithNonImplementingClass()
 	{
-		StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
-		Assert.That(NotImplementingIMethodReturn.WasMultipleParametersInvoked, Is.False);
+		var (wasInvoked, _) = StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
+		Assert.That(wasInvoked, Is.False);
 	}
 
 	public interface IMethodReturn
@@ -40,34 +42,16 @@ public static class MethodReturnTests
 
 	public sealed class NotImplementingIMethodReturn
 	{
-		public static void MultipleParameters(string a, int b) =>
-			NotImplementingIMethodReturn.WasMultipleParametersInvoked = true;
+		public static void MultipleParameters(string a, int b) { }
 
-		public static void NoParameters() =>
-			NotImplementingIMethodReturn.WasNoParametersInvoked = true;
-
-		public static bool WasMultipleParametersInvoked { get; private set; }
-
-		public static bool WasNoParametersInvoked { get; private set; }
+		public static void NoParameters() { }
 	}
 
 	public sealed class MethodReturn
 		: IMethodReturn
 	{
-		public static int MultipleParameters(string a, int b)
-		{
-			MethodReturn.WasMultipleParametersInvoked = true;
-			return 1;
-		}
+		public static int MultipleParameters(string a, int b) => 2;
 
-		public static int NoParameters()
-		{
-			MethodReturn.WasNoParametersInvoked = true;
-			return 1;
-		}
-
-		public static bool WasMultipleParametersInvoked { get; private set; }
-
-		public static bool WasNoParametersInvoked { get; private set; }
+		public static int NoParameters() => 1;
 	}
 }

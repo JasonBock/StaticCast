@@ -31,12 +31,11 @@ internal static class StaticCastMembersBuilder
 				var parameterNames = signature.Method.Parameters.Length > 0 ?
 					"new object[] { " + string.Join(", ", signature.Method.Parameters.Select(_ => $"{_.Name}")) + " }" :
 					"null";
-				var shouldReturn = !signature.Method.ReturnsVoid ?
-					$"return ({signature.Method.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})" : string.Empty;
-				var returnForNoAssignment =
-					signature.Method.ReturnsVoid ? string.Empty : "return default!;";
-				var suppresionOperator =
-					signature.Method.ReturnsVoid ? string.Empty : "!";
+				var returnValueForInvocation = !signature.Method.ReturnsVoid ?
+					$"return (true, ({signature.Method.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})result!)" : 
+					"return (true, Unit.Instance)";
+				var returnForNoInvocation =
+					!signature.Method.ReturnsVoid ? "return (false, default!)" : "return (false, Unit.Instance)";
 
 				var code =
 					$$"""
@@ -49,9 +48,11 @@ internal static class StaticCastMembersBuilder
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"{{signature.Method.Name}}", BindingFlags.Public | BindingFlags.Static, {{parameterTypes}})!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							{{shouldReturn}}targetMethod.Invoke(null, {{parameterNames}}){{suppresionOperator}};
+							var result = targetMethod.Invoke(null, {{parameterNames}});
+							{{returnValueForInvocation}};
 						}
-						{{returnForNoAssignment}}
+						
+						{{returnForNoInvocation}};
 					}
 					""";
 				writer.WriteLines(code, "\t");

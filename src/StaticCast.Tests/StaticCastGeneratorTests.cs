@@ -5,6 +5,17 @@ namespace StaticCast.Tests;
 
 public static class StaticCastGeneratorTests
 {
+	private const string UnitCode =
+		"""
+		public sealed class Unit
+		{
+			public static Unit Instance { get; } = new();
+			
+			private Unit() { }
+		}
+
+		""";
+
 	[Test]
 	public static async Task GenerateWhereMethodReturnsVoidWithParameterAsync()
 	{
@@ -76,7 +87,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Void
 				{
-					public static void Work(string data)
+					public static (bool, Unit) Work(string data)
 					{
 						Verify();
 						
@@ -85,18 +96,24 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, new object[] { data });
+							var result = targetMethod.Invoke(null, new object[] { data });
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
 				}
 			}
 			
 			""";
 
-	  await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+		await TestAssistants.RunAsync<StaticCastGenerator>(code,
+			 new[]
+			 {
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			 },
+			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 
 	[Test]
@@ -170,7 +187,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Void
 				{
-					public static void Work()
+					public static (bool, Unit) Work()
 					{
 						Verify();
 						
@@ -179,9 +196,11 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, null);
+							var result = targetMethod.Invoke(null, null);
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -189,8 +208,12 @@ public static class StaticCastGeneratorTests
 			""";
 
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			 new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+			new[]
+			{
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			},
+			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 
 	[Test]
@@ -205,8 +228,11 @@ public static class StaticCastGeneratorTests
 
 			public static class Test
 			{
-				public static int CallWork() =>
-					StaticCast<object, IWork>.Int.Work("data");
+				public static int CallWork()
+				{
+					var (_, result) = StaticCast<object, IWork>.Int.Work("data");
+					return result;
+				}
 			}
 			""";
 
@@ -264,7 +290,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Int
 				{
-					public static int Work(string data)
+					public static (bool, int) Work(string data)
 					{
 						Verify();
 						
@@ -273,9 +299,11 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							return (int)targetMethod.Invoke(null, new object[] { data })!;
+							var result = targetMethod.Invoke(null, new object[] { data });
+							return (true, (int)result!);
 						}
-						return default!;
+						
+						return (false, default!);
 					}
 				}
 			}
@@ -283,8 +311,12 @@ public static class StaticCastGeneratorTests
 			""";
 
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			 new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+			new[]
+			{
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			},
+			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 
 	// TODO: Test where two interfaces have the same signature.
@@ -368,7 +400,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Void
 				{
-					public static void Work(string data)
+					public static (bool, Unit) Work(string data)
 					{
 						Verify();
 						
@@ -377,9 +409,11 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, new object[] { data });
+							var result = targetMethod.Invoke(null, new object[] { data });
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -387,8 +421,12 @@ public static class StaticCastGeneratorTests
 			""";
 
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			 new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+			new[]
+			{
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			},
+			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 
 	[Test]
@@ -463,7 +501,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Void
 				{
-					public static void Work(string data)
+					public static (bool, Unit) Work(string data)
 					{
 						Verify();
 						
@@ -472,11 +510,13 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, new object[] { data });
+							var result = targetMethod.Invoke(null, new object[] { data });
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
-					public static void Rest()
+					public static (bool, Unit) Rest()
 					{
 						Verify();
 						
@@ -485,9 +525,11 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Rest", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, null);
+							var result = targetMethod.Invoke(null, null);
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -495,8 +537,12 @@ public static class StaticCastGeneratorTests
 			""";
 
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			 new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+			new[]
+			{
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			},
+			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 
 	[Test]
@@ -571,7 +617,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Void
 				{
-					public static void Work()
+					public static (bool, Unit) Work()
 					{
 						Verify();
 						
@@ -580,9 +626,11 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, null);
+							var result = targetMethod.Invoke(null, null);
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -590,8 +638,12 @@ public static class StaticCastGeneratorTests
 			""";
 
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			 new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+			new[]
+			{
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			},
+			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 
 	[Test]
@@ -671,7 +723,7 @@ public static class StaticCastGeneratorTests
 				
 				public static class Void
 				{
-					public static void Work()
+					public static (bool, Unit) Work()
 					{
 						Verify();
 						
@@ -680,11 +732,13 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Work", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, null);
+							var result = targetMethod.Invoke(null, null);
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
-					public static void Drive()
+					public static (bool, Unit) Drive()
 					{
 						Verify();
 						
@@ -693,9 +747,11 @@ public static class StaticCastGeneratorTests
 							var interfaceMethod = typeof(TAs).GetMethod(
 								"Drive", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
-							targetMethod.Invoke(null, null);
+							var result = targetMethod.Invoke(null, null);
+							return (true, Unit.Instance);
 						}
 						
+						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -703,7 +759,11 @@ public static class StaticCastGeneratorTests
 			""";
 
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			 new[] { (typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode) },
-			 Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
+			new[]
+			{
+				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorTests.UnitCode),
+				(typeof(StaticCastGenerator), "StaticCast.g.cs", generatedCode),
+			},
+			Enumerable.Empty<DiagnosticResult>()).ConfigureAwait(false);
 	}
 }

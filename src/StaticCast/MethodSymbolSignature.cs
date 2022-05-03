@@ -10,8 +10,8 @@ internal sealed class MethodSymbolSignature
 
 	private static string GetSignature(IMethodSymbol symbol)
 	{
-		var returnType = symbol.ReturnsVoid ? "void" :
-			symbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
+		var returnType = symbol.ReturnsVoid ? "(bool, Unit)" :
+			$"(bool, {symbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})";
 		var parameters = string.Join(", ", symbol.Parameters.Select(
 			_ => $"{_.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)} {_.Name}"));
 		return $"public static {returnType} {symbol.Name}({parameters})";
