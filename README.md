@@ -46,7 +46,7 @@ That's what this library is trying to support!
 To try this out, [install the NuGet package](https://www.nuget.org/packages/StaticCast). Note that your project must be enabled for C# latest features. Then, all you have to do is call `StaticCast`, providing the generic type values along with the member you want to invoke:
 
 ```
-StaticCast<T, IWork>.Work("value");
+StaticCast<T, IWork>.Void.Work("value");
 ```
 
 `StaticCast` is a type that doesn't exist until you type it in code. The source generator looks for that invocation pattern, and will generate the necessary code to invoke the method or property that you specify after the dot.

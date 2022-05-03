@@ -9,15 +9,15 @@ Let's say you had this in code:
 ```
 public static class Test
 {
-    public static void CheckForString(object value)
+  public static void CheckForString(object value)
+  {
+    if(value is string data)
     {
-        if(value is string data)
-        {
-            // Do something with data that's specific
-            // for a string
-            var split = data.Split(',');
-        }
+      // Do something with data that's specific
+      // for a string
+      var split = data.Split(',');
     }
+  }
 }
 ```
 
@@ -30,13 +30,13 @@ This feature has been around since C# 1. However, in C# 11, a new feature, stati
 ```
 public interface IWork
 {
-    static abstract void Work();
+  static abstract void Work();
 }
 
 public class Work
-	: IWork
+  : IWork
 {
-	public static void Work(string data) { /* ... */ }
+  public static void Work(string data) { /* ... */ }
 }
 ```
 
@@ -45,14 +45,14 @@ Of course, there may be multiple implementations of `IWork`. You'd like to be ab
 ```
 public static void Work<T>()
 {
-	/* This won't work right now.
-	if(T is TWork work)
-	{
-		// Do something specific with work
-		// that's specific for an IWork implementation
-		work.Work("stuff");
-	}
-	*/
+  /* This won't work right now.
+  if(T is TWork work)
+  {
+    // Do something specific with work
+    // that's specific for an IWork implementation
+    work.Work("stuff");
+  }
+  */
 }
 ```
 
@@ -65,20 +65,20 @@ However, with source generators (and a bit of Reflection) we can do this.
 Essentially, this is what the user will type in:
 
 ```
-StaticCast<Type, InterfaceType>.MethodName(...);
+StaticCast<Type, InterfaceType>.ReturnType.MethodName(...);
 ```
 
 With the `IWork/Work` example above, it would be this (assume `T` is a generic parameter from a containing method or type):
 
 ```
-StaticCast<T, IWork>.Work("data");
+StaticCast<T, IWork>.Void.Work("data");
 ```
 
-The generator looks for method invocations that is a `SimpleMemberAccessExpression`, where the first part has the name "StaticCast", very similar to what I did with PartiallyApplied. This member needs exactly 2 generic parameters. The name of the call is what's used later (the parameters are irrelevant for generation as you'll see in a moment). If the 2nd type is an interface (we can't do that with a constraint, and if the type is "open" we can't check it with a diagnostic either), and it has static abstract members that match the provided name, we can generate all calls that match the name of the method. Internally it'll do a lookup via reflection (and make the generic method if needed) and invoke it.
+The generator looks for method invocations that is a `SimpleMemberAccessExpression`, where the first part has the name "StaticCast", very similar to what I did with PartiallyApplied. This member needs exactly 2 generic parameters. What happens on the "right" side is irrelevant as StaticCast will look for **all** static abstract members. If the 2nd type is an interface (we can't do that with a constraint), the static abstract members will be found. Internally it'll do a lookup via reflection (and make the generic method if needed) and invoke it.
 
 If the 2nd generic parameter is "open" and doesn't have enough constraint information to determine if it **can** be of an interface type, I should check this at runtime and throw `NotSupportedException`.
 
-Using the InterfaceMapping type makes it straightforward to handle if the member implementation is explicit or not.
+Using the `InterfaceMapping` type makes it straightforward to handle if the member implementation is explicit or not.
 
 So, we only generate members that are `public`, `static` and `abstract`.
 
@@ -94,20 +94,23 @@ I may end up making this `partial`. Not sure if it's necessary at this point. I'
 
 It may seem odd at first that there isn't a constraint like `where T : TAs`. The reason is that the "cast" is being done at runtime, so I can't constrain the type like that. This will make more sense when I show the implementation.
 
-Next, I look for every member on the interface with the given name. I don't care about any parameters, both generic and for the method itself. For each member, I'll generate a method that looks like this:
+Next, I look for every member on the interface with the given name. I don't care about any parameters, both generic and for the method itself. For each member, I'll generate a method that looks like this (note that these methods will be defined within a static class that has the same name as the return type):
 
 ```
-public static void Work(string data)
+public static class Void
 {
-	Verify();
+  public static void Work(string data)
+  {
+    Verify();
 
-	if (typeof(T).IsAssignableTo(typeof(TAs)))
-	{
-		var interfaceMethod = typeof(TAs).GetMethod(
-			"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
-		var targetMethod = GetTargetMethod(interfaceMethod);
-		targetMethod.Invoke(null, new object[] { data });
-	}
+    if (typeof(T).IsAssignableTo(typeof(TAs)))
+    {
+      var interfaceMethod = typeof(TAs).GetMethod(
+        "Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
+      var targetMethod = GetTargetMethod(interfaceMethod);
+      targetMethod.Invoke(null, new object[] { data });
+    }
+  }
 }
 ```
 
@@ -116,23 +119,23 @@ There are two helper methods, `Verify()` and `GetTargetMethod()`, that need to b
 ```
 private static void Verify()
 {
-	var tType = typeof(T);
+  var tType = typeof(T);
 
-	if (tType.IsInterface)
-	{
-		throw new NotSupportedException($"The T type, {tType.FullName}, is an interface.");
-	}
-	else if (tType.IsAbstract)
-	{
-		throw new NotSupportedException($"The T type, {tType.FullName}, is abstract.");
-	}
+  if (tType.IsInterface)
+  {
+    throw new NotSupportedException($"The T type, {tType.FullName}, is an interface.");
+  }
+  else if (tType.IsAbstract)
+  {
+    throw new NotSupportedException($"The T type, {tType.FullName}, is abstract.");
+  }
 
-	var asType = typeof(TAs);
+  var asType = typeof(TAs);
 
-	if (!asType.IsInterface)
-	{
-		throw new NotSupportedException($"The TAs type, {asType.FullName}, is not an interface.");
-	}
+  if (!asType.IsInterface)
+  {
+    throw new NotSupportedException($"The TAs type, {asType.FullName}, is not an interface.");
+  }
 }
 ```
 
@@ -141,29 +144,29 @@ It may not be necessary to check `TAs` to be an interface at runtime, as code wo
 ```
 private static MethodInfo GetTargetMethod(MethodInfo interfaceMethod)
 {
-	var interfaceMap = typeof(T).GetInterfaceMap(typeof(TAs));
+  var interfaceMap = typeof(T).GetInterfaceMap(typeof(TAs));
 
-	MethodInfo? targetMethod = null;
+  MethodInfo? targetMethod = null;
 
-	for (var i = 0; i < interfaceMap.InterfaceMethods.Length; i++)
-	{
-		if (interfaceMap.InterfaceMethods[i] == interfaceMethod)
-		{
-			targetMethod = interfaceMap.TargetMethods[i]!;
-		}
-	}
+  for (var i = 0; i < interfaceMap.InterfaceMethods.Length; i++)
+  {
+    if (interfaceMap.InterfaceMethods[i] == interfaceMethod)
+    {
+      targetMethod = interfaceMap.TargetMethods[i]!;
+    }
+  }
 
-	if(targetMethod is null)
-	{
-		// Note: if T is abstract, it still must implement
-		// static abstract members from TAs as you can't have
-		// static abstract members in a class. So this would be
-		// really odd for this to occur
-		throw new NotSupportedException(
-			$"{typeof(TAs).FullName} does not have a mapping for {interfaceMethod.Name} on type {typeof(T).FullName}");
-	}
+  if(targetMethod is null)
+  {
+    // Note: if T is abstract, it still must implement
+    // static abstract members from TAs as you can't have
+    // static abstract members in a class. So this would be
+    // really odd for this to occur
+    throw new NotSupportedException(
+      $"{typeof(TAs).FullName} does not have a mapping for {interfaceMethod.Name} on type {typeof(T).FullName}");
+  }
 
-	return targetMethod!;
+  return targetMethod!;
 }
 ```
 
@@ -172,30 +175,33 @@ When `GetTargetMethod()` is called, I've already verified that `T` implements `T
 Properties will also work in a similar fashion. Let's say our target interface has a static abstract read-only property called `Name` that returns a `string`. In that case, it would be called like this:
 
 ```
-StaticCast<TargetTypeName, InterfaceName>.Name;
+StaticCast<TargetTypeName, InterfaceName>.String.Name;
 ```
 
 Here's what that would generate:
 
 ```
-public static string Name
+public static class String
 {
-	get
-	{
-		Verify();
+  public static string Name
+  {
+    get
+    {
+      Verify();
 
-		if (typeof(T).IsAssignableTo(typeof(TAs)))
-		{
-			var interfaceMethod = typeof(TAs).GetProperty(
-				"Name", BindingFlags.Public | BindingFlags.Static)!.GetGetMethod()!;
-			var targetMethod = GetTargetMethod(interfaceMethod);
-			return (string)targetMethod.Invoke(null, null)!;
-		}
-		else
-		{
-			return default!;
-		}
-	}
+      if (typeof(T).IsAssignableTo(typeof(TAs)))
+      {
+        var interfaceMethod = typeof(TAs).GetProperty(
+          "Name", BindingFlags.Public | BindingFlags.Static)!.GetGetMethod()!;
+        var targetMethod = GetTargetMethod(interfaceMethod);
+        return (string)targetMethod.Invoke(null, null)!;
+      }
+      else
+      {
+        return default!;
+      }
+    }
+  }
 }
 ```
 
@@ -209,7 +215,5 @@ When I'm generating implementations in `StaticCast<,>`, I can't repeat them. For
 
 ## Diagnostics
 
-* If a member is not `public`, `static`, and `abstract`.
-* If the `StaticCast` usage does not provide exactly 2 generic parameters.
 * If the 2nd generic parameter to `StaticCast` is not an interface, or, if it's an open generic, it cannot be determined if it is constrained to an interface.
-* If the given member name isn't found on `TAs`
+* If the given interface does not have any static abstract members.
