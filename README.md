@@ -41,7 +41,7 @@ public void Work<T>(string data)
 
 That's what this library is trying to support!
 
-* Note: Based on [this discussion](https://discord.com/channels/732297728826277939/732297994699014164/964243603687866378), there may be direct language support for this in the future. However, there are no plans for this as far as I can tell for C# 11, and what comes after that is a complete unknown at this point.
+*Note: Based on [this discussion](https://discord.com/channels/732297728826277939/732297994699014164/964243603687866378), there may be direct language support for this in the future. However, there are no plans for this as far as I can tell for C# 11, and what comes after that is a complete unknown at this point.*
 
 ## Tutorial
 
