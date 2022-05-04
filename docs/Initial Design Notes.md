@@ -6,7 +6,7 @@ This source generator will allow developers to call implementations of static ab
 
 Let's say you had this in code:
 
-```
+```csharp
 public static class Test
 {
   public static void CheckForString(object value)
@@ -27,7 +27,7 @@ While this example is somewhat contrived, this situation occurs in .NET. For exa
 
 This feature has been around since C# 1. However, in C# 11, a new feature, static abstract members in interfaces, allows you to define static members on an interface that must be implemented in a class:
 
-```
+```csharp
 public interface IWork
 {
   static abstract void Work();
@@ -42,7 +42,7 @@ public class Work
 
 Of course, there may be multiple implementations of `IWork`. You'd like to be able to call them without having to create a method that has a constraint on the generic type that it must be of an `IWork` type:
 
-```
+```csharp
 public static void Work<T>()
 {
   /* This won't work right now.
@@ -64,7 +64,7 @@ However, with source generators (and a bit of Reflection) we can do this.
 
 Essentially, this is what the user will type in:
 
-```
+```csharp
 StaticCast<Type, InterfaceType>.ReturnType.MethodName(...);
 ```
 
@@ -86,7 +86,7 @@ So, we only generate members that are `public`, `static` and `abstract`.
 
 First, I'll need to generate a class called `StaticCast`:
 
-```
+```csharp
 public static class StaticCast<T, TAs>
 ```
 
@@ -96,7 +96,7 @@ It may seem odd at first that there isn't a constraint like `where T : TAs`. The
 
 Next, I look for every member on the interface with the given name. I don't care about any parameters, both generic and for the method itself. For each member, I'll generate a method that looks like this (note that these methods will be defined within a static class that has the same name as the return type):
 
-```
+```csharp
 public static class Void
 {
   public static void Work(string data)
@@ -116,7 +116,7 @@ public static class Void
 
 There are two helper methods, `Verify()` and `GetTargetMethod()`, that need to be generated as well:
 
-```
+```csharp
 private static void Verify()
 {
   var tType = typeof(T);
@@ -141,7 +141,7 @@ private static void Verify()
 
 It may not be necessary to check `TAs` to be an interface at runtime, as code won't be generated if I couldn't determine if what was passed into `TAs` was an interface in the first place. The checks for `T` are needed as we won't be able to consistently resolve this at compile time.
 
-```
+```csharp
 private static MethodInfo GetTargetMethod(MethodInfo interfaceMethod)
 {
   var interfaceMap = typeof(T).GetInterfaceMap(typeof(TAs));
@@ -174,13 +174,13 @@ When `GetTargetMethod()` is called, I've already verified that `T` implements `T
 
 Properties will also work in a similar fashion. Let's say our target interface has a static abstract read-only property called `Name` that returns a `string`. In that case, it would be called like this:
 
-```
+```csharp
 StaticCast<TargetTypeName, InterfaceName>.String.Name;
 ```
 
 Here's what that would generate:
 
-```
+```csharp
 public static class String
 {
   public static string Name

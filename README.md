@@ -6,7 +6,7 @@ Casting generic types for static abstract member implementation
 
 In C#, we've been able to cast parameters to specific types for a long time:
 
-```
+```csharp
 public void Work(object data)
 {
   if (data is string content)
@@ -18,7 +18,7 @@ public void Work(object data)
 
 In C# 11, a new feature called [static abstract members in interfaces](https://github.com/dotnet/csharplang/issues/4436) allows a developer to define static members in an interface that must be implemented in a class:
 
-```
+```csharp
 public interface IWork
 {
   static abstract void Work(string data);
@@ -27,7 +27,7 @@ public interface IWork
 
 Unfortunately, we won't be able to do a "static cast" to a generic parameter, something like this:
 
-```
+```csharp
 // This won't work, just illustrating the point...
 public void Work<T>(string data)
 {
@@ -47,7 +47,7 @@ That's what this library is trying to support!
 
 To try this out, [install the NuGet package](https://www.nuget.org/packages/StaticCast). Note that your project must be enabled for C# latest features. Then, all you have to do is call `StaticCast`, providing the generic type values along with the member you want to invoke:
 
-```
+```csharp
 StaticCast<T, IWork>.Void.Work("value");
 ```
 
