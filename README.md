@@ -41,6 +41,8 @@ public void Work<T>(string data)
 
 That's what this library is trying to support!
 
+* Note: Based on [this discussion](https://discord.com/channels/732297728826277939/732297994699014164/964243603687866378), there may be direct language support for this in the future. However, there are no plans for this as far as I can tell for C# 11, and what comes after that is a complete unknown at this point.
+
 ## Tutorial
 
 To try this out, [install the NuGet package](https://www.nuget.org/packages/StaticCast). Note that your project must be enabled for C# latest features. Then, all you have to do is call `StaticCast`, providing the generic type values along with the member you want to invoke:
