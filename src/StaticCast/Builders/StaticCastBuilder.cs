@@ -8,11 +8,13 @@ namespace StaticCast.Builders;
 
 internal sealed class StaticCastBuilder
 {
-	private readonly ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate;
+	private readonly ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> methodsToGenerate;
+	private readonly ImmutableDictionary<ITypeSymbol, HashSet<PropertySymbolSignature>> propertiesToGenerate;
 
-	internal StaticCastBuilder(ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
+	internal StaticCastBuilder(ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> methodsToGenerate,
+		ImmutableDictionary<ITypeSymbol, HashSet<PropertySymbolSignature>> propertiesToGenerate)
 	{
-		this.membersToGenerate = membersToGenerate;
+		(this.methodsToGenerate, this.propertiesToGenerate) = (methodsToGenerate, propertiesToGenerate);
 		this.Code = SourceText.From(this.Build(), Encoding.UTF8);
 	}
 
@@ -27,7 +29,8 @@ internal sealed class StaticCastBuilder
 		writer.WriteLine("{");
 		writer.Indent++;
 		StaticCastHelpersBuilder.Build(writer, gatherer);
-		StaticCastMembersBuilder.Build(writer, gatherer, this.membersToGenerate);
+		StaticCastMethodsBuilder.Build(writer, gatherer, this.methodsToGenerate);
+		StaticCastPropertiesBuilder.Build(writer, gatherer, this.propertiesToGenerate);
 		writer.Indent--;
 		writer.WriteLine("}");
 

@@ -5,13 +5,13 @@ namespace StaticCast;
 internal sealed class MethodSymbolSignature
 	: IEquatable<MethodSymbolSignature>
 {
-	internal MethodSymbolSignature(IMethodSymbol member) =>
-		(this.Method, this.Signature) = (member, MethodSymbolSignature.GetSignature(member));
+	internal MethodSymbolSignature(IMethodSymbol method) =>
+		(this.Method, this.Signature) = (method, MethodSymbolSignature.GetSignature(method));
 
 	private static string GetSignature(IMethodSymbol symbol)
 	{
-		var returnType = symbol.ReturnsVoid ? "(bool, Unit)" :
-			$"(bool, {symbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})";
+		var returnType = symbol.ReturnsVoid ? "void" :
+			symbol.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
 		var parameters = string.Join(", ", symbol.Parameters.Select(
 			_ => $"{_.Type.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)} {_.Name}"));
 		return $"public static {returnType} {symbol.Name}({parameters})";
@@ -19,7 +19,7 @@ internal sealed class MethodSymbolSignature
 
 	public override bool Equals(object obj) => this.Equals(obj as MethodSymbolSignature);
 
-	public bool Equals(MethodSymbolSignature? other) => other is null ? false : this.Signature == other.Signature;
+	public bool Equals(MethodSymbolSignature? other) => other is not null && this.Signature == other.Signature;
 
 	public override int GetHashCode() => this.Signature.GetHashCode();
 

@@ -26,8 +26,6 @@ internal sealed class StaticCastGenerator
 			 .Where(static _ => _ is not null);
 		var compilationNodes = context.CompilationProvider.Combine(provider.Collect());
 		var output = context.AnalyzerConfigOptionsProvider.Combine(compilationNodes);
-		context.RegisterPostInitializationOutput(context =>
-			context.AddSource("Unit.g.cs", new UnitBuilder().Code));
 		context.RegisterSourceOutput(output,
 			(context, source) => CreateOutput(source.Right.Left, source.Right.Right, source.Left, context));
 	}
@@ -42,9 +40,11 @@ internal sealed class StaticCastGenerator
 			context.ReportDiagnostic(diagnostic);
 		}
 	
-		if (information.MembersToGenerate.Count > 0)
+		if (information.MethodsToGenerate.Count > 0 ||
+			information.PropertiesToGenerate.Count > 0)
 		{
-			var builder = new StaticCastBuilder(information.MembersToGenerate);
+			var builder = new StaticCastBuilder(
+				information.MethodsToGenerate, information.PropertiesToGenerate);
 			context.AddSource("StaticCast.g.cs", builder.Code);
 		}
 	}

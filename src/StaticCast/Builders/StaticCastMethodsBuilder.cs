@@ -6,21 +6,21 @@ using System.Reflection;
 
 namespace StaticCast.Builders;
 
-internal static class StaticCastMembersBuilder
+internal static class StaticCastMethodsBuilder
 {
 	internal static void Build(IndentedTextWriter writer, NamespaceGatherer gatherer,
-		  ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> membersToGenerate)
+		  ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> methodsToGenerate)
 	{
 		gatherer.Add(typeof(BindingFlags));
 
-		foreach(var memberToGenerate in membersToGenerate)
+		foreach(var methodToGenerate in methodsToGenerate)
 		{
 			writer.WriteLine();
-			writer.WriteLine($"public static class {memberToGenerate.Key.GetName(TypeNameOption.Flatten).ToPascalCase()}");
+			writer.WriteLine($"public static partial class {methodToGenerate.Key.GetName(TypeNameOption.Flatten).ToPascalCase()}");
 			writer.WriteLine("{");
 			writer.Indent++;
 
-			foreach(var signature in memberToGenerate.Value)
+			foreach(var signature in methodToGenerate.Value)
 			{
 				// TODO: what about generic parameter names?
 				var interfaceMethodVariable = VariableNameGenerator.GenerateUniqueName("interfaceMethod", signature.Method.Parameters);

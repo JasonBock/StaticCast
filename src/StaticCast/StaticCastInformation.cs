@@ -11,7 +11,8 @@ internal sealed class StaticCastInformation
 		Compilation compilation)
 	{
 		var diagnostics = new List<Diagnostic>();
-		var membersToGenerate = new Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>>();
+		var methodsToGenerate = new Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>>();
+		var propertiesToGenerate = new Dictionary<ITypeSymbol, HashSet<PropertySymbolSignature>>();
 
 		foreach (var accessNode in accessNodes)
 		{
@@ -33,30 +34,17 @@ internal sealed class StaticCastInformation
 					}
 					else
 					{
-						if (accessNode.Name is IdentifierNameSyntax accessNodeName)
+						if (accessNode.Name is IdentifierNameSyntax)
 						{
-							var memberName = accessNodeName.Identifier.Text;
-							// TODO: We also need properties.
-							var members = castToParameterSymbol.GetMembers().OfType<IMethodSymbol>()
-								.Where(_ => _.IsStatic && _.IsAbstract);
-
-							if (!members.Any())
+							if(!castToParameterSymbol.GetMembers().Any(
+								_ => (_.Kind == SymbolKind.Method || _.Kind == SymbolKind.Property) && _.IsStatic && _.IsAbstract))
 							{
 								diagnostics.Add(InterfaceHasNoStaticAbstractMembersDiagnostic.Create(castToParameterSymbol, castToParameterType));
 							}
 							else
 							{
-								foreach (var member in members)
-								{
-									if (membersToGenerate.ContainsKey(member.ReturnType))
-									{
-										membersToGenerate[member.ReturnType].Add(new MethodSymbolSignature(member));
-									}
-									else
-									{
-										membersToGenerate.Add(member.ReturnType, new() { new MethodSymbolSignature(member) });
-									}
-								}
+								StaticCastInformation.GetMethods(methodsToGenerate, castToParameterType, castToParameterSymbol);
+								StaticCastInformation.GetProperties(propertiesToGenerate, castToParameterType, castToParameterSymbol);
 							}
 						}
 					}
@@ -65,7 +53,47 @@ internal sealed class StaticCastInformation
 		}
 
 		this.Diagnostics = diagnostics.ToImmutableArray();
-		this.MembersToGenerate = membersToGenerate.ToImmutableDictionary();
+		this.MethodsToGenerate = methodsToGenerate.ToImmutableDictionary();
+		this.PropertiesToGenerate = propertiesToGenerate.ToImmutableDictionary();
+	}
+
+	private static void GetMethods(Dictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> methodsToGenerate, 
+		TypeSyntax castToParameterType, ITypeSymbol castToParameterSymbol)
+	{
+		var methods = castToParameterSymbol.GetMembers().OfType<IMethodSymbol>()
+			.Where(_ => _.IsStatic && _.IsAbstract && 
+				_.MethodKind != MethodKind.PropertyGet && _.MethodKind != MethodKind.PropertySet);
+
+		foreach (var method in methods)
+		{
+			if (methodsToGenerate.ContainsKey(method.ReturnType))
+			{
+				methodsToGenerate[method.ReturnType].Add(new MethodSymbolSignature(method));
+			}
+			else
+			{
+				methodsToGenerate.Add(method.ReturnType, new() { new MethodSymbolSignature(method) });
+			}
+		}
+	}
+
+	private static void GetProperties(Dictionary<ITypeSymbol, HashSet<PropertySymbolSignature>> propertiesToGenerate,
+		TypeSyntax castToParameterType, ITypeSymbol castToParameterSymbol)
+	{
+		var properties = castToParameterSymbol.GetMembers().OfType<IPropertySymbol>()
+			.Where(_ => _.IsStatic && _.IsAbstract);
+
+		foreach (var property in properties)
+		{
+			if (propertiesToGenerate.ContainsKey(property.Type))
+			{
+				propertiesToGenerate[property.Type].Add(new PropertySymbolSignature(property));
+			}
+			else
+			{
+				propertiesToGenerate.Add(property.Type, new() { new PropertySymbolSignature(property) });
+			}
+		}
 	}
 
 	private static (ISymbol?, ImmutableArray<ITypeSymbol>) GetParameterTypes(TypeSyntax node, SemanticModel model)
@@ -80,5 +108,6 @@ internal sealed class StaticCastInformation
 	}
 
 	internal ImmutableArray<Diagnostic> Diagnostics { get; private set; }
-	internal ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> MembersToGenerate { get; private set; }
+	internal ImmutableDictionary<ITypeSymbol, HashSet<MethodSymbolSignature>> MethodsToGenerate { get; private set; }
+	internal ImmutableDictionary<ITypeSymbol, HashSet<PropertySymbolSignature>> PropertiesToGenerate { get; private set; }
 }
