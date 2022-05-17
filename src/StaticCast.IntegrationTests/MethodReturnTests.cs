@@ -7,31 +7,29 @@ public static class MethodReturnTests
 	[Test]
 	public static void CallWithNoParametersWithImplementingClass()
 	{
-		var (wasInvoked, result) = StaticCast<MethodReturn, IMethodReturn>.Int.NoParameters();
-		Assert.That(wasInvoked, Is.True);
+		var result = StaticCast<ImplementsIMethodReturn, IMethodReturn>.Int.NoParameters();
 		Assert.That(result, Is.EqualTo(1));
 	}
 
 	[Test]
 	public static void CallWithNoParametersWithNonImplementingClass()
 	{
-		var (wasInvoked, _) = StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.NoParameters();
-		Assert.That(wasInvoked, Is.False);
+		var result = StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.NoParameters();
+		Assert.That(result, Is.EqualTo(0));
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithImplementingClass()
 	{
-		var (wasInvoked, result) = StaticCast<MethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
-		Assert.That(wasInvoked, Is.True);
+		var result = StaticCast<ImplementsIMethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
 		Assert.That(result, Is.EqualTo(2));
 	}
 
 	[Test]
 	public static void CallWithMultipleParametersWithNonImplementingClass()
 	{
-		var (wasInvoked, _) = StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
-		Assert.That(wasInvoked, Is.False);
+		var result = StaticCast<NotImplementingIMethodReturn, IMethodReturn>.Int.MultipleParameters("a", 2);
+		Assert.That(result, Is.EqualTo(0));
 	}
 
 	public interface IMethodReturn
@@ -42,12 +40,12 @@ public static class MethodReturnTests
 
 	public sealed class NotImplementingIMethodReturn
 	{
-		public static void MultipleParameters(string a, int b) { }
+		public static int MultipleParameters(string a, int b) => -2;
 
-		public static void NoParameters() { }
+		public static int NoParameters() => -1;
 	}
 
-	public sealed class MethodReturn
+	public sealed class ImplementsIMethodReturn
 		: IMethodReturn
 	{
 		public static int MultipleParameters(string a, int b) => 2;

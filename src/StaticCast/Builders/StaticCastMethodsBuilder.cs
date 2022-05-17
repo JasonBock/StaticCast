@@ -25,9 +25,6 @@ internal static class StaticCastMethodsBuilder
 				// TODO: what about generic parameter names?
 				var interfaceMethodVariable = VariableNameGenerator.GenerateUniqueName("interfaceMethod", signature.Method.Parameters);
 				var targetMethodVariable = VariableNameGenerator.GenerateUniqueName("targetMethod", signature.Method.Parameters);
-				var resultVariable = !signature.Method.ReturnsVoid ?
-					VariableNameGenerator.GenerateUniqueName("result", signature.Method.Parameters) :
-					string.Empty;
 
 				// TODO: For now, I'm assuming the tests will be very simple -
 				// i.e. no generics, no outs or refs, etc.
@@ -38,33 +35,52 @@ internal static class StaticCastMethodsBuilder
 				var parameterNames = signature.Method.Parameters.Length > 0 ?
 					"new object[] { " + string.Join(", ", signature.Method.Parameters.Select(_ => $"{_.Name}")) + " }" :
 					"null";
-				var invocationResultCode = !signature.Method.ReturnsVoid ?
-					$"var {resultVariable} = " : string.Empty;
-				var returnValueForInvocation = !signature.Method.ReturnsVoid ?
-					$"return (true, ({signature.Method.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}){resultVariable}!)" : 
-					"return (true, Unit.Instance)";
-				var returnForNoInvocation =
-					!signature.Method.ReturnsVoid ? "return (false, default!)" : "return (false, Unit.Instance)";
 
-				var code =
-					$$"""
-					{{signature.Signature}}
-					{
-						Verify();
-						
-						if (typeof(T).IsAssignableTo(typeof(TAs)))
+				if(signature.Method.ReturnsVoid)
+				{
+					var code =
+						$$"""
+						{{signature.Signature}}
 						{
-							var {{interfaceMethodVariable}} = typeof(TAs).GetMethod(
-								"{{signature.Method.Name}}", BindingFlags.Public | BindingFlags.Static, {{parameterTypes}})!;
-							var {{targetMethodVariable}} = GetTargetMethod({{interfaceMethodVariable}});
-							{{invocationResultCode}}{{targetMethodVariable}}.Invoke(null, {{parameterNames}});
-							{{returnValueForInvocation}};
+							Verify();
+							
+							if (typeof(T).IsAssignableTo(typeof(TAs)))
+							{
+								var {{interfaceMethodVariable}} = typeof(TAs).GetMethod(
+									"{{signature.Method.Name}}", BindingFlags.Public | BindingFlags.Static, {{parameterTypes}})!;
+								var {{targetMethodVariable}} = GetTargetMethod({{interfaceMethodVariable}});
+								{{targetMethodVariable}}.Invoke(null, {{parameterNames}});
+							}
 						}
-						
-						{{returnForNoInvocation}};
-					}
-					""";
-				writer.WriteLines(code, "\t");
+						""";
+					writer.WriteLines(code, "\t");
+				}
+				else
+				{
+					var resultVariable = VariableNameGenerator.GenerateUniqueName("result", signature.Method.Parameters);
+					var returnValueForInvocation =
+						$"return ({signature.Method.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}){resultVariable}!";
+
+					var code =
+						$$"""
+						{{signature.Signature}}
+						{
+							Verify();
+							
+							if (typeof(T).IsAssignableTo(typeof(TAs)))
+							{
+								var {{interfaceMethodVariable}} = typeof(TAs).GetMethod(
+									"{{signature.Method.Name}}", BindingFlags.Public | BindingFlags.Static, {{parameterTypes}})!;
+								var {{targetMethodVariable}} = GetTargetMethod({{interfaceMethodVariable}});
+								var {{resultVariable}} = {{targetMethodVariable}}.Invoke(null, {{parameterNames}});
+								{{returnValueForInvocation}};
+							}
+							
+							return default!;
+						}
+						""";
+					writer.WriteLines(code, "\t");
+				}
 			}
 
 			writer.Indent--;

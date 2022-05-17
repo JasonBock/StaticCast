@@ -17,11 +17,8 @@ public static class StaticCastGeneratorTests
 
 			public static class Test
 			{
-				public static int CallWork()
-				{
-					var (_, result) = StaticCast<object, IWork>.Int.Work("a", "b", "c", "d");
-					return result;
-				}
+				public static int CallWork() =>
+					StaticCast<object, IWork>.Int.Work("a", "b", "c", "d");
 			}
 			""";
 
@@ -77,9 +74,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Int
+				public static partial class Int
 				{
-					public static (bool, int) Work(string interfaceMethod, string _interfaceMethod, string targetMethod, string result)
+					public static int Work(string interfaceMethod, string _interfaceMethod, string targetMethod, string result)
 					{
 						Verify();
 						
@@ -89,10 +86,10 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string), typeof(string), typeof(string), typeof(string) })!;
 							var _targetMethod = GetTargetMethod(__interfaceMethod);
 							var _result = _targetMethod.Invoke(null, new object[] { interfaceMethod, _interfaceMethod, targetMethod, result });
-							return (true, (int)_result!);
+							return (int)_result!;
 						}
 						
-						return (false, default!);
+						return default!;
 					}
 				}
 			}
@@ -176,9 +173,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Void
+				public static partial class Void
 				{
-					public static (bool, Unit) Work(string data)
+					public static void Work(string data)
 					{
 						Verify();
 						
@@ -188,10 +185,7 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, new object[] { data });
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -275,9 +269,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Void
+				public static partial class Void
 				{
-					public static (bool, Unit) Work()
+					public static void Work()
 					{
 						Verify();
 						
@@ -287,10 +281,7 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, null);
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -317,11 +308,8 @@ public static class StaticCastGeneratorTests
 
 			public static class Test
 			{
-				public static int CallWork()
-				{
-					var (_, result) = StaticCast<object, IWork>.Int.Work("data");
-					return result;
-				}
+				public static int CallWork() =>
+					StaticCast<object, IWork>.Int.Work("data");
 			}
 			""";
 
@@ -377,9 +365,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Int
+				public static partial class Int
 				{
-					public static (bool, int) Work(string data)
+					public static int Work(string data)
 					{
 						Verify();
 						
@@ -389,10 +377,10 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							var result = targetMethod.Invoke(null, new object[] { data });
-							return (true, (int)result!);
+							return (int)result!;
 						}
 						
-						return (false, default!);
+						return default!;
 					}
 				}
 			}
@@ -486,9 +474,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Void
+				public static partial class Void
 				{
-					public static (bool, Unit) Work(string data)
+					public static void Work(string data)
 					{
 						Verify();
 						
@@ -498,10 +486,7 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, new object[] { data });
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -586,9 +571,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Void
+				public static partial class Void
 				{
-					public static (bool, Unit) Work(string data)
+					public static void Work(string data)
 					{
 						Verify();
 						
@@ -598,12 +583,9 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, new[] { typeof(string) })!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, new object[] { data });
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
-					public static (bool, Unit) Rest()
+					public static void Rest()
 					{
 						Verify();
 						
@@ -613,10 +595,7 @@ public static class StaticCastGeneratorTests
 								"Rest", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, null);
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -701,9 +680,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Void
+				public static partial class Void
 				{
-					public static (bool, Unit) Work()
+					public static void Work()
 					{
 						Verify();
 						
@@ -713,10 +692,7 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, null);
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
 				}
 			}
@@ -806,9 +782,9 @@ public static class StaticCastGeneratorTests
 					return targetMethod!;
 				}
 				
-				public static class Void
+				public static partial class Void
 				{
-					public static (bool, Unit) Work()
+					public static void Work()
 					{
 						Verify();
 						
@@ -818,12 +794,9 @@ public static class StaticCastGeneratorTests
 								"Work", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, null);
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
-					public static (bool, Unit) Drive()
+					public static void Drive()
 					{
 						Verify();
 						
@@ -833,10 +806,7 @@ public static class StaticCastGeneratorTests
 								"Drive", BindingFlags.Public | BindingFlags.Static, Type.EmptyTypes)!;
 							var targetMethod = GetTargetMethod(interfaceMethod);
 							targetMethod.Invoke(null, null);
-							return (true, Unit.Instance);
 						}
-						
-						return (false, Unit.Instance);
 					}
 				}
 			}

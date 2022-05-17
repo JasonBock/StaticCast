@@ -7,17 +7,6 @@ namespace StaticCast.Tests;
 
 public static class StaticCastGeneratorDiagnosticsTests
 {
-	private const string UnitCode =
-		"""
-		public sealed class Unit
-		{
-			public static Unit Instance { get; } = new();
-			
-			private Unit() { }
-		}
-
-		""";
-
 	[Test]
 	public static async Task GenerateWhenAsTypeIsInterfaceWithNoStaticAbstractMembersAsync()
 	{
@@ -42,10 +31,7 @@ public static class StaticCastGeneratorDiagnosticsTests
 		var compilerDiagnostic = new DiagnosticResult("CS0307", DiagnosticSeverity.Error)
 			.WithSpan(10, 3, 10, 29);
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			new[]
-			{
-				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorDiagnosticsTests.UnitCode),
-			},
+			Array.Empty<(Type, string, string)>(),
 			new[] { diagnostic, compilerDiagnostic }).ConfigureAwait(false);
 	}
 
@@ -71,10 +57,7 @@ public static class StaticCastGeneratorDiagnosticsTests
 		var compilerDiagnostic = new DiagnosticResult("CS0307", DiagnosticSeverity.Error)
 			.WithSpan(8, 3, 8, 24);
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			new[]
-			{
-				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorDiagnosticsTests.UnitCode),
-			},
+			Array.Empty<(Type, string, string)>(),
 			new[] { diagnostic, compilerDiagnostic }).ConfigureAwait(false);
 	}
 
@@ -98,10 +81,7 @@ public static class StaticCastGeneratorDiagnosticsTests
 		var compilerDiagnostic = new DiagnosticResult("CS0307", DiagnosticSeverity.Error)
 			.WithSpan(6, 3, 6, 24);
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			new[]
-			{
-				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorDiagnosticsTests.UnitCode),
-			},
+			Array.Empty<(Type, string, string)>(),
 			new[] { diagnostic, compilerDiagnostic }).ConfigureAwait(false);
 	}
 
@@ -124,10 +104,7 @@ public static class StaticCastGeneratorDiagnosticsTests
 		var compilerDiagnostic = new DiagnosticResult("CS0307", DiagnosticSeverity.Error)
 			.WithSpan(5, 3, 5, 29);
 		await TestAssistants.RunAsync<StaticCastGenerator>(code,
-			new[]
-			{
-				(typeof(StaticCastGenerator), "Unit.g.cs", StaticCastGeneratorDiagnosticsTests.UnitCode),
-			},
+			Array.Empty<(Type, string, string)>(),
 			new[] { diagnostic, compilerDiagnostic }).ConfigureAwait(false);
 	}
 }

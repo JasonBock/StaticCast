@@ -48,13 +48,9 @@ internal static class StaticCastPropertiesBuilder
 	private static void BuildGetter(IndentedTextWriter writer, PropertySymbolSignature signature)
 	{
 		// TODO: what about generic parameter names?
-		var getMethod = signature.Property.GetMethod!;
-
 		// TODO: For now, I'm assuming the tests will be very simple -
 		// i.e. no generics, no outs or refs, etc.
-		var returnValueForInvocation =
-			$"return ({getMethod.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)})result!";
-		var returnForNoInvocation = "return default!";
+		var getMethod = signature.Property.GetMethod!;
 
 		var code =
 			$$"""
@@ -67,10 +63,10 @@ internal static class StaticCastPropertiesBuilder
 					var interfaceMethod = typeof(TAs).GetProperty("{{signature.Property.Name}}")!.GetGetMethod()!;
 					var targetMethod = GetTargetMethod(interfaceMethod);
 					var result = targetMethod.Invoke(null, null);
-					{{returnValueForInvocation}};
+					return ({{getMethod.ReturnType.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}})result!;
 				}
 				
-				{{returnForNoInvocation}};
+				return default!;
 			}
 			""";
 		writer.WriteLines(code, "\t");
