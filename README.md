@@ -1,3 +1,7 @@
+**NOTE** This worked in a preview version of .NET 7, but at some point, [this issue](https://github.com/dotnet/csharplang/issues/5955) was raised, and now you can no longer pass interfaces with static abstract members as type arguments. This means StaticCast will not work :(.
+
+It's possible that in the future, this restriction may be relaxed, but there is no guarantee that will ever happen. If you don't like this restriction, **please** provide that feedback to Microsoft in that issue. I personally would like to see this relaxed, as it also [affects Rocks](https://github.com/JasonBock/Rocks/blob/main/docs/ROCK7%20-%20Interface%20Has%20Static%20Abstract%20Members.md), and I have a design worked out to mock these static members.
+
 # StaticCast
 
 Casting generic types for static abstract member implementation
